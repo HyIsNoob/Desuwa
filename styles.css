@@ -14,7 +14,7 @@ body {
               var(--bg);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .container {
@@ -28,10 +28,12 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .left { display:flex; flex-direction: column; gap: 4px; }
-.center { position: absolute; left: 50%; transform: translateX(-50%); top: 8px; }
+.center { position: absolute; left: 50%; transform: translateX(-50%); top: 8px; pointer-events: none; }
 .right { display:flex; align-items:center; gap: 12px; }
 .counter { font-weight: 900; letter-spacing: 1px; font-size: clamp(28px, 5vw, 56px); text-shadow: 0 3px 0 rgba(0,0,0,.08); }
 .counter.bounce { animation: counterBounce .35s ease; }
@@ -50,6 +52,7 @@ body {
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,.15);
 }
+.swap.ghost { background: transparent; border-style: dashed; }
 
 .btn {
   background: transparent;
@@ -61,7 +64,7 @@ body {
 
 #mainImg {
   display: block;
-  width: min(65vmin, 540px);
+  width: min(80vw, 520px);
   height: auto;
   filter: drop-shadow(0 12px 30px rgba(0,0,0,.25));
   transition: transform .08s ease;
@@ -101,6 +104,21 @@ body {
   0% { transform: scale(1); }
   30% { transform: scale(1.06); }
   100% { transform: scale(1); }
+}
+
+@keyframes speechFly {
+  0% { transform: translate(-50%, -120%) scale(.9); opacity: 0; }
+  50% { transform: translate(-50%, -160%) scale(1.05); opacity: 1; }
+  100% { transform: translate(-50%, -200%) scale(1); opacity: 0; }
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+  .center { position: static; transform: none; order: 3; width: 100%; text-align: center; }
+  .counter { font-size: clamp(24px, 8vw, 40px); }
+  .right { width: 100%; justify-content: center; flex-wrap: wrap; }
+  .left { width: 100%; text-align: center; order: 2; }
+  .container { grid-template-rows: auto 1fr; }
 }
 
 

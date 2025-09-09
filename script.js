@@ -13,7 +13,7 @@ function pickRandomImage() {
 }
 
 function updateTitle(count) {
-  document.title = 'Desuwa';
+  document.title = `Desuwa x ${count}`;
 }
 
 function spawnFlyingAt(x, y) {
@@ -34,6 +34,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const volume = document.getElementById('volume');
   const counterEl = document.getElementById('counter');
   const swapBtn = document.getElementById('changeImg');
+  const resetBtn = document.getElementById('resetCounter');
+  let lastTouch = 0;
 
   // Randomize main image per visit
   const chosen = pickRandomImage();
@@ -41,8 +43,9 @@ window.addEventListener('DOMContentLoaded', () => {
   mainImg.style.setProperty('--imgScale', chosen.scale);
   log('Main image:', chosen);
 
-  // Counter reset on refresh
-  let count = 0;
+  // Counter persisted in session
+  const SESSION_KEY = 'desuwa-count';
+  let count = Number(sessionStorage.getItem(SESSION_KEY) || 0);
   counterEl.textContent = `DESUWA !! x ${count}`;
   updateTitle(count);
 
@@ -54,8 +57,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Click behavior
   const trigger = (x, y) => {
-    try { audio.currentTime = 0; } catch {}
-    audio.play().catch(err => log('Audio play blocked', err));
+    // Overlapping audio: new instance each time to avoid cutting off previous
+    const player = new Audio(audio.src);
+    player.volume = Number(volume.value);
+    player.play().catch(err => log('Audio play blocked', err));
     btn.classList.remove('bonk');
     // Force reflow to restart animation
     void btn.offsetWidth;
@@ -66,10 +71,13 @@ window.addEventListener('DOMContentLoaded', () => {
     counterEl.classList.remove('bounce');
     void counterEl.offsetWidth;
     counterEl.classList.add('bounce');
+    sessionStorage.setItem(SESSION_KEY, String(count));
     updateTitle(count);
+    spawnSpeech(x, y);
   };
 
   btn.addEventListener('click', (e) => {
+    if (Date.now() - lastTouch < 400) return; // ignore ghost click after touch
     const rect = (e.currentTarget).getBoundingClientRect();
     const x = e.clientX;
     const y = e.clientY;
@@ -78,6 +86,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Also handle touch devices
   btn.addEventListener('touchstart', (e) => {
+    lastTouch = Date.now();
     const t = e.touches[0];
     trigger(t.clientX, t.clientY);
   }, { passive: true });
@@ -92,6 +101,39 @@ window.addEventListener('DOMContentLoaded', () => {
     mainImg.style.setProperty('--imgScale', chosen.scale);
   };
   swapBtn.addEventListener('click', swap);
+
+  // Reset counter
+  resetBtn.addEventListener('click', () => {
+    count = 0;
+    sessionStorage.setItem(SESSION_KEY, '0');
+    counterEl.textContent = `DESUWA !! x ${count}`;
+    updateTitle(count);
+  });
+
+  // Spawn random speech bubble text near click
+  function spawnSpeech(x, y){
+    const texts = [
+      'DESUWA!', 'desu...wa!', 'De—su—wa~', 'DE SU W A', 'desu(wa?)', 'DESUWA!!!', 'desuwa~', 'desu...'
+    ];
+    const el = document.createElement('div');
+    el.textContent = texts[Math.floor(Math.random()*texts.length)];
+    el.style.position = 'fixed';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.transform = 'translate(-50%, -120%)';
+    el.style.background = 'white';
+    el.style.color = '#111';
+    el.style.borderRadius = '10px';
+    el.style.padding = '4px 8px';
+    el.style.fontWeight = '900';
+    el.style.fontSize = '14px';
+    el.style.pointerEvents = 'none';
+    el.style.boxShadow = '0 6px 18px rgba(0,0,0,.25)';
+    el.style.opacity = '0.95';
+    el.style.animation = 'speechFly 700ms ease-out forwards';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 750);
+  }
 });
 
 
